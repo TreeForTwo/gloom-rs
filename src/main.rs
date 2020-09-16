@@ -8,6 +8,8 @@ mod util;
 
 use glutin::event::{Event, WindowEvent, DeviceEvent, KeyboardInput, ElementState::{Pressed, Released}, VirtualKeyCode::{self, *}};
 use glutin::event_loop::ControlFlow;
+use glm::Vec3;
+use crate::shader::Shader;
 
 const SCREEN_W: u32 = 800;
 const SCREEN_H: u32 = 600;
@@ -39,7 +41,25 @@ fn offset<T>(n: u32) -> *const c_void {
 
 
 // == // Modify and complete the function below for the first task
-// unsafe fn FUNCTION_NAME(ARGUMENT_NAME: &Vec<f32>, ARGUMENT_NAME: &Vec<u32>) -> u32 { } 
+unsafe fn create_vao(coordinates: &Vec<f32>, indices: &Vec<u32>) -> u32 {
+    let mut vao_index: u32 = 0;
+    gl::GenVertexArrays(1, &mut vao_index);
+    gl::BindVertexArray(vao_index);
+
+    let mut buffer_index: u32 = 0;
+    gl::GenBuffers(1, &mut buffer_index);
+    gl::BindBuffer(gl::ARRAY_BUFFER, buffer_index);
+    gl::BufferData(gl::ARRAY_BUFFER, byte_size_of_array(&coordinates), pointer_to_array(&coordinates), gl::STATIC_DRAW);
+
+    gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, 0, ptr::null());
+    gl::EnableVertexAttribArray(0);
+
+    gl::GenBuffers(1, &mut buffer_index);
+    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, buffer_index);
+    gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, byte_size_of_array(&indices), pointer_to_array(&indices), gl::STATIC_DRAW);
+
+    vao_index
+}
 
 fn main() {
     // Set up the necessary objects to deal with windows and event handling
@@ -93,16 +113,34 @@ fn main() {
         }
 
         // == // Set up your VAO here
-        unsafe {
+        let tris: Vec<f32> = vec![-0.6, -0.6, 0.,
+                                  0.6, -0.6, 0.,
+                                  0., 0.6, 0.,
 
+                                  -0.9, -0.9, 0.,
+                                  -0.7, -0.9, 0.,
+                                  -0.8, -0.7, 0.,
+
+                                  0.6, -0.8, -1.2,
+                                  0., 0.4, 0.,
+                                  -0.8, -0.2, 1.2];
+        let indices: Vec<u32> = vec![0, 1, 2,
+                                     3, 4, 0,
+                                     5, 6, 7];
+        let mut vao_index: u32 = 0;
+        unsafe {
+            vao_index = create_vao(&tris, &indices);
         }
 
         // Basic usage of shader helper
         // The code below returns a shader object, which contains the field .program_id
         // The snippet is not enough to do the assignment, and will need to be modified (outside of just using the correct path), but it only needs to be called once
         // shader::ShaderBuilder::new().attach_file("./path/to/shader").link();
+        let mut simple_shader: Shader;
         unsafe {
-
+            simple_shader = shader::ShaderBuilder::new().attach_file("./shaders/simple.vert")
+                .attach_file("./shaders/simple.frag").link();
+            gl::UseProgram(simple_shader.program_id);
         }
 
         // Used to demonstrate keyboard handling -- feel free to remove
@@ -146,11 +184,8 @@ fn main() {
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
                 // Issue the necessary commands to draw your scene here
-
-
-
-
-
+                gl::BindVertexArray(vao_index);
+                gl::DrawElements(gl::TRIANGLES, (3 * indices.len() as i32), gl::UNSIGNED_INT, ptr::null());
                 
             }
 
