@@ -41,7 +41,7 @@ fn offset<T>(n: u32) -> *const c_void {
 
 
 // == // Modify and complete the function below for the first task
-unsafe fn create_vao(coordinates: &Vec<f32>, indices: &Vec<u32>) -> u32 {
+unsafe fn create_vao(coordinates: &Vec<f32>, indices: &Vec<u32>, colours: &Vec<f32>) -> u32 {
     let mut vao_index: u32 = 0;
     gl::GenVertexArrays(1, &mut vao_index);
     gl::BindVertexArray(vao_index);
@@ -53,6 +53,13 @@ unsafe fn create_vao(coordinates: &Vec<f32>, indices: &Vec<u32>) -> u32 {
 
     gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, 0, ptr::null());
     gl::EnableVertexAttribArray(0);
+
+    gl::GenBuffers(1, &mut buffer_index);
+    gl::BindBuffer(gl::ARRAY_BUFFER, buffer_index);
+    gl::BufferData(gl::ARRAY_BUFFER, byte_size_of_array(&colours), pointer_to_array(&colours), gl::STATIC_DRAW);
+
+    gl::VertexAttribPointer(1, 4, gl::FLOAT, gl::FALSE, 0, ptr::null());
+    gl::EnableVertexAttribArray(1);
 
     gl::GenBuffers(1, &mut buffer_index);
     gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, buffer_index);
@@ -113,23 +120,34 @@ fn main() {
         }
 
         // == // Set up your VAO here
-        let tris: Vec<f32> = vec![-0.6, -0.6, 0.,
-                                  0.6, -0.6, 0.,
-                                  0., 0.6, 0.,
+        let tris: Vec<f32> = vec![-0.6, -0.4, 0.,
+                                  0.6, -0.4, 0.,
+                                  0., 0.8, 0.,
 
                                   -0.9, -0.9, 0.,
-                                  -0.7, -0.9, 0.,
-                                  -0.8, -0.7, 0.,
+                                  -0.5, -0.9, 0.,
+                                  -0.7, -0.5, 0.,
 
-                                  0.6, -0.8, -1.2,
-                                  0., 0.4, 0.,
-                                  -0.8, -0.2, 1.2];
+                                  0.5, -0.9, 0.,
+                                  0.9, -0.9, 0.,
+                                  0.7, -0.5, 0.];
         let indices: Vec<u32> = vec![0, 1, 2,
-                                     3, 4, 0,
-                                     5, 6, 7];
+                                     3, 4, 5,
+                                     6, 7, 8];
+        let colours: Vec<f32> = vec![1.0, 1.0, 1.0, 1.0,
+                                     1.0, 0.0, 1.0, 1.0,
+                                     0.0, 0.0, 0.0, 1.0,
+
+                                     0.0, 1.0, 0.0, 1.0,
+                                     0.0, 0.0, 1.0, 1.0,
+                                     1.0, 0.0, 0.0, 1.0,
+
+                                     0.0, 1.0, 1.0, 1.0,
+                                     1.0, 0.0, 1.0, 1.0,
+                                     1.0, 1.0, 0.0, 1.0];
         let mut vao_index: u32 = 0;
         unsafe {
-            vao_index = create_vao(&tris, &indices);
+            vao_index = create_vao(&tris, &indices, &colours);
         }
 
         // Basic usage of shader helper
