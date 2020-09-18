@@ -8,7 +8,7 @@ mod util;
 
 use glutin::event::{Event, WindowEvent, DeviceEvent, KeyboardInput, ElementState::{Pressed, Released}, VirtualKeyCode::{self, *}};
 use glutin::event_loop::ControlFlow;
-use glm::Vec3;
+use glm::{Vec3, Vec2};
 use crate::shader::Shader;
 use std::f32::consts::PI;
 
@@ -163,7 +163,8 @@ fn main() {
         }
 
         // Used to demonstrate keyboard handling -- feel free to remove
-        let mut _arbitrary_number = 0.0;
+        let mut pos: glm::Vec3 = glm::vec3(0.0, 0.0, 0.0);
+        let mut ang: glm::Vec2 = glm::vec2(0.0, 0.0);
 
         let first_frame_time = std::time::Instant::now();
         let mut last_frame_time = first_frame_time;
@@ -179,12 +180,35 @@ fn main() {
                 for key in keys.iter() {
                     match key {
                         VirtualKeyCode::A => {
-                            _arbitrary_number += delta_time;
+                            pos.x += delta_time;
                         },
                         VirtualKeyCode::D => {
-                            _arbitrary_number -= delta_time;
+                            pos.x -= delta_time;
                         },
-
+                        VirtualKeyCode::S => {
+                            pos.z += delta_time;
+                        },
+                        VirtualKeyCode::W => {
+                            pos.z -= delta_time;
+                        },
+                        VirtualKeyCode::LShift => {
+                            pos.y += delta_time;
+                        },
+                        VirtualKeyCode::Space => {
+                            pos.y -= delta_time;
+                        },
+                        VirtualKeyCode::Q => {
+                            ang.x -= delta_time;
+                        },
+                        VirtualKeyCode::E => {
+                            ang.x += delta_time;
+                        },
+                        VirtualKeyCode::R => {
+                            ang.y += delta_time;
+                        },
+                        VirtualKeyCode::F => {
+                            ang.y -= delta_time;
+                        },
 
                         _ => { }
                     }
@@ -205,7 +229,12 @@ fn main() {
                 let mut transform: glm::Mat4 = glm::identity();
 
                 transform *= glm::perspective(1.0, PI / 2.0, 1.0, 100.0);
-                transform *= glm::translation(&glm::vec3(0.0, 0.0, -2.0));
+                transform *= glm::translation(&glm::vec3(0.0, 0.0, -1.2));
+                transform *= glm::scaling(&glm::vec3(1.0, 1.0, -1.0));
+                transform *= glm::translation(&pos);
+                transform *= glm::rotation(ang.y, &glm::vec3(1.0, 0.0, 0.0));
+                transform *= glm::rotation(ang.x, &glm::vec3(0.0, 1.0, 0.0));
+
 
                 gl::UniformMatrix4fv(2, 1, gl::FALSE, transform.as_ptr());
 
