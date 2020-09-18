@@ -10,6 +10,7 @@ use glutin::event::{Event, WindowEvent, DeviceEvent, KeyboardInput, ElementState
 use glutin::event_loop::ControlFlow;
 use glm::Vec3;
 use crate::shader::Shader;
+use std::f32::consts::PI;
 
 const SCREEN_W: u32 = 800;
 const SCREEN_H: u32 = 600;
@@ -120,17 +121,17 @@ fn main() {
         }
 
         // == // Set up your VAO here
-        let tris: Vec<f32> = vec![-0.6, 0.7, -0.,
-                                  0., -0.5, -0.,
-                                  0.6, 0.7, -0.,
+        let tris: Vec<f32> = vec![-0.6, 0.7, 0.4,
+                                  0., -0.5, 0.4,
+                                  0.6, 0.7, 0.4,
 
-                                  -0.6, -0.45, -0.2,
-                                  0.1, -0.9, -0.2,
-                                  0., 0.2, -0.2,
+                                  -0.6, -0.45, 0.2,
+                                  0.1, -0.9, 0.2,
+                                  0., 0.2, 0.2,
 
-                                  -0.1, -0.9, -0.4,
-                                  0.6, -0.45, -0.4,
-                                  -0., 0.2, -0.4];
+                                  -0.1, -0.9, 0.,
+                                  0.6, -0.45, 0.,
+                                  -0., 0.2, 0.];
         let indices: Vec<u32> = vec![0, 1, 2,
                                      3, 4, 5,
                                      6, 7, 8];
@@ -203,7 +204,8 @@ fn main() {
 
                 let mut transform: glm::Mat4 = glm::identity();
 
-                transform = glm::translation(&glm::vec3(0.0, 1.0, 0.0));
+                transform *= glm::perspective(1.0, PI / 2.0, 1.0, 100.0);
+                transform *= glm::translation(&glm::vec3(0.0, 0.0, -2.0));
 
                 gl::UniformMatrix4fv(2, 1, gl::FALSE, transform.as_ptr());
 
