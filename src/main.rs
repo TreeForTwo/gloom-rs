@@ -201,7 +201,11 @@ fn main() {
                 gl::ClearColor(0.163, 0.163, 0.163, 1.0);
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
-                gl::Uniform1f(2, elapsed.sin() as f32);
+                let mut transform: glm::Mat4 = glm::identity();
+
+                transform = glm::translation(&glm::vec3(0.0, 1.0, 0.0));
+
+                gl::UniformMatrix4fv(2, 1, gl::FALSE, transform.as_ptr());
 
                 // Issue the necessary commands to draw your scene here
                 gl::BindVertexArray(vao_index);
