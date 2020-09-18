@@ -201,6 +201,8 @@ fn main() {
                 gl::ClearColor(0.163, 0.163, 0.163, 1.0);
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
+                gl::Uniform1f(2, elapsed.sin() as f32);
+
                 // Issue the necessary commands to draw your scene here
                 gl::BindVertexArray(vao_index);
                 gl::DrawElements(gl::TRIANGLES, (3 * indices.len() as i32), gl::UNSIGNED_INT, ptr::null());
