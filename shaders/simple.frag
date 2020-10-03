@@ -9,7 +9,5 @@ out vec4 color;
 
 void main()
 {
-    color = vec4(vertexNormal, 1.0f);
-    //vec3 c = vertexColour.rgb * max(0, dot(vertexNormal, -lightDirection));
-    //color = vec4(c, 1.0f);
+    color = vec4(vertexColour.rgb * max(0, dot(vertexNormal, -lightDirection)), 1.0f);
 }
