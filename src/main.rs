@@ -43,6 +43,10 @@ fn offset<T>(n: u32) -> *const c_void {
 
 
 // == // Modify and complete the function below for the first task
+unsafe fn create_mesh_vao(mesh: &mesh::Mesh) -> u32 {
+    create_vao(&mesh.vertices, &mesh.normals, &mesh.colors, &mesh.indices)
+}
+
 unsafe fn create_vao(vertices: &Vec<f32>, normals: &Vec<f32>, colours: &Vec<f32>, indices: &Vec<u32>) -> u32 {
     let mut vao_index: u32 = 0;
     gl::GenVertexArrays(1, &mut vao_index);
@@ -127,11 +131,18 @@ fn main() {
 
         // == // Set up your VAO here
         let terrain = mesh::Terrain::load("resources/lunarsurface.obj");
-        let mut vao_index: u32 = 0;
+        let helicopter = mesh::Helicopter::load("resources/helicopter.obj");
+        let mut vao_indices = Vec::<u32>::new();
+        let mut index_counts = Vec::<i32>::new();
         unsafe {
-            vao_index = create_vao(&terrain.vertices, &terrain.normals, &terrain.colors,
-                                   &terrain.indices);
+            vao_indices.push(create_mesh_vao(&terrain));
+            index_counts.push(terrain.index_count);
+            for i in 0..3 {
+                vao_indices.push(create_mesh_vao(&helicopter[i]));
+                index_counts.push(helicopter[i].index_count);
+            }
         }
+
 
         // Basic usage of shader helper
         // The code below returns a shader object, which contains the field .program_id
@@ -231,9 +242,10 @@ fn main() {
                 gl::UniformMatrix4fv(3, 1, gl::FALSE, transform.as_ptr());
 
                 // Issue the necessary commands to draw your scene here
-                gl::BindVertexArray(vao_index);
-                gl::DrawElements(gl::TRIANGLES, (3 * terrain.index_count), gl::UNSIGNED_INT, ptr::null());
-                
+                for i in 0..vao_indices.len() {
+                    gl::BindVertexArray(vao_indices[i]);
+                    gl::DrawElements(gl::TRIANGLES, (3 * index_counts[i]), gl::UNSIGNED_INT, ptr::null());
+                }
             }
 
             context.swap_buffers().unwrap();
