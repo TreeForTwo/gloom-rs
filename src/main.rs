@@ -207,11 +207,11 @@ fn main() {
                             pos += mov(&glm::vec4(0.0, -delta_time, 0.0, 1.0), &ang);
                         },
                         VirtualKeyCode::Q => {
-                            ang.x -= delta_time;
+                            ang.x += delta_time;
 
                         },
                         VirtualKeyCode::E => {
-                            ang.x += delta_time;
+                            ang.x -= delta_time;
 
                         },
                         VirtualKeyCode::R => {
