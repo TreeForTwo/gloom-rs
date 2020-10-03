@@ -109,6 +109,7 @@ unsafe fn draw_scene(root: &scene_graph::SceneNode, view_projection_matrix: &glm
         let mut transform: glm::Mat4 = view_projection_matrix * &root.current_transformation_matrix;
 
         gl::UniformMatrix4fv(3, 1, gl::FALSE, transform.as_ptr());
+        gl::UniformMatrix4fv(4, 1, gl::FALSE, root.current_transformation_matrix.as_ptr());
         gl::BindVertexArray(root.vao_id);
         gl::DrawElements(gl::TRIANGLES, (3 * root.index_count), gl::UNSIGNED_INT, ptr::null());
     }
@@ -192,7 +193,7 @@ fn main() {
         let mut door_node = scene_graph::SceneNode::from_vao(vao_indices[4], index_counts[4]);
 
         body_node.position = glm::vec3(0.0, 0.0, -20.0);
-        body_node.rotation = glm::vec3(0.0, PI / 2.0, 0.0);
+        body_node.rotation = glm::vec3(0.0, -PI / 2.0, 0.0);
 
         main_rotor_node.rotation = glm::vec3(0.0, 0.5, 0.0);
         tail_rotor_node.rotation = glm::vec3(0.5, 0.0, 0.0);
