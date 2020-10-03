@@ -7,12 +7,14 @@ mod shader;
 mod util;
 mod mesh;
 mod scene_graph;
+mod toolbox;
 
 use glutin::event::{Event, WindowEvent, DeviceEvent, KeyboardInput, ElementState::{Pressed, Released}, VirtualKeyCode::{self, *}};
 use glutin::event_loop::ControlFlow;
 use glm::{Vec3, Vec2, identity};
 use crate::shader::Shader;
 use std::f32::consts::PI;
+use crate::toolbox::simple_heading_animation;
 
 const SCREEN_W: u32 = 800;
 const SCREEN_H: u32 = 600;
@@ -236,6 +238,13 @@ fn main() {
             let elapsed = now.duration_since(first_frame_time).as_secs_f32();
             let delta_time = now.duration_since(last_frame_time).as_secs_f32();
             last_frame_time = now;
+
+            main_rotor_node.rotation += glm::vec3(0.0, 10.0 * delta_time, 0.0);
+            tail_rotor_node.rotation += glm::vec3(10.0 * delta_time, 0.0, 0.0);
+
+            let heading = simple_heading_animation(elapsed);
+            body_node.position = glm::vec3(heading.x, 1.0, heading.z);
+            body_node.rotation = glm::vec3(heading.yaw, heading.pitch, heading.roll);
 
             // Handle keyboard input
             if let Ok(keys) = pressed_keys.lock() {
