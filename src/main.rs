@@ -192,37 +192,37 @@ fn main() {
                 for key in keys.iter() {
                     match key {
                         VirtualKeyCode::A => {
-                            pos += mov(&glm::vec4(delta_time, 0.0, 0.0, 1.0), &ang);
+                            pos += mov(&glm::vec4(100.0 * delta_time, 0.0, 0.0, 1.0), &ang);
                         },
                         VirtualKeyCode::D => {
-                            pos += mov(&glm::vec4(-delta_time, 0.0, 0.0, 1.0), &ang);
+                            pos += mov(&glm::vec4(100.0 * -delta_time, 0.0, 0.0, 1.0), &ang);
                         },
                         VirtualKeyCode::S => {
-                            pos += mov(&glm::vec4(0.0, 0.0, delta_time, 1.0), &ang);
+                            pos += mov(&glm::vec4(0.0, 0.0, 100.0 * -delta_time, 1.0), &ang);
                         },
                         VirtualKeyCode::W => {
-                            pos += mov(&glm::vec4(0.0, 0.0, -delta_time, 1.0), &ang);
+                            pos += mov(&glm::vec4(0.0, 0.0, 100.0 * delta_time, 1.0), &ang);
                         },
                         VirtualKeyCode::LShift => {
-                            pos += mov(&glm::vec4(0.0, delta_time, 0.0, 1.0), &ang);
+                            pos += mov(&glm::vec4(0.0, 100.0 * delta_time, 0.0, 1.0), &ang);
                         },
                         VirtualKeyCode::Space => {
-                            pos += mov(&glm::vec4(0.0, -delta_time, 0.0, 1.0), &ang);
+                            pos += mov(&glm::vec4(0.0, 100.0 * -delta_time, 0.0, 1.0), &ang);
                         },
                         VirtualKeyCode::Q => {
-                            ang.x += delta_time;
-
-                        },
-                        VirtualKeyCode::E => {
                             ang.x -= delta_time;
 
                         },
+                        VirtualKeyCode::E => {
+                            ang.x += delta_time;
+
+                        },
                         VirtualKeyCode::R => {
-                            ang.y += delta_time;
+                            ang.y -= delta_time;
 
                         },
                         VirtualKeyCode::F => {
-                            ang.y -= delta_time;
+                            ang.y += delta_time;
                         },
 
                         _ => { }
@@ -245,7 +245,6 @@ fn main() {
 
                 transform *= glm::perspective(1.0, PI / 2.0, 1.0, 1000.0);
                 transform *= glm::translation(&glm::vec3(0.0, 0.0, -1.2));
-                transform *= glm::scaling(&glm::vec3(1.0, 1.0, -1.0));
                 transform *= glm::rotation(ang.y, &glm::vec3(1.0, 0.0, 0.0));
                 transform *= glm::rotation(ang.x, &glm::vec3(0.0, 1.0, 0.0));
                 transform *= glm::translation(&pos);
