@@ -111,7 +111,7 @@ unsafe fn draw_scene(root: &scene_graph::SceneNode, view_projection_matrix: &glm
         gl::UniformMatrix4fv(3, 1, gl::FALSE, transform.as_ptr());
         gl::UniformMatrix4fv(4, 1, gl::FALSE, root.current_transformation_matrix.as_ptr());
         gl::BindVertexArray(root.vao_id);
-        gl::DrawElements(gl::TRIANGLES, (3 * root.index_count), gl::UNSIGNED_INT, ptr::null());
+        gl::DrawElements(gl::TRIANGLES, 3 * root.index_count, gl::UNSIGNED_INT, ptr::null());
     }
     // Recurse
     for &child in &root.children {
@@ -173,6 +173,7 @@ fn main() {
         // == // Set up your VAO here
         let terrain = mesh::Terrain::load("resources/lunarsurface.obj");
         let helicopter = mesh::Helicopter::load("resources/helicopter.obj");
+        let helicopter_count: usize = 5;
         let mut vao_indices = Vec::<u32>::new();
         let mut index_counts = Vec::<i32>::new();
         unsafe {
@@ -187,25 +188,24 @@ fn main() {
         // Set up scene graph
         let mut root_node = scene_graph::SceneNode::new();
         let mut terrain_node = scene_graph::SceneNode::from_vao(vao_indices[0], index_counts[0]);
-        let mut body_node = scene_graph::SceneNode::from_vao(vao_indices[1], index_counts[1]);
-        let mut main_rotor_node = scene_graph::SceneNode::from_vao(vao_indices[2], index_counts[2]);
-        let mut tail_rotor_node = scene_graph::SceneNode::from_vao(vao_indices[3], index_counts[3]);
-        let mut door_node = scene_graph::SceneNode::from_vao(vao_indices[4], index_counts[4]);
-
-        body_node.position = glm::vec3(0.0, 0.0, -20.0);
-        body_node.rotation = glm::vec3(0.0, -PI / 2.0, 0.0);
-
-        main_rotor_node.rotation = glm::vec3(0.0, 0.5, 0.0);
-        tail_rotor_node.rotation = glm::vec3(0.5, 0.0, 0.0);
-
-        tail_rotor_node.reference_point = glm::vec3(0.35, 2.3, 10.4);
-        main_rotor_node.reference_point = glm::vec3(0.0, 2.2, 0.0);
-
         root_node.add_child(&terrain_node);
-        terrain_node.add_child(&body_node);
-        body_node.add_child(&main_rotor_node);
-        body_node.add_child(&tail_rotor_node);
-        body_node.add_child(&door_node);
+
+        let mut helicopters = Vec::<scene_graph::Node>::new();
+        for i in 0..helicopter_count {
+            let mut body_node = scene_graph::SceneNode::from_vao(vao_indices[1], index_counts[1]);
+            let mut main_rotor_node = scene_graph::SceneNode::from_vao(vao_indices[2], index_counts[2]);
+            let mut tail_rotor_node = scene_graph::SceneNode::from_vao(vao_indices[3], index_counts[3]);
+            let mut door_node = scene_graph::SceneNode::from_vao(vao_indices[4], index_counts[4]);
+            tail_rotor_node.reference_point = glm::vec3(0.35, 2.3, 10.4);
+            main_rotor_node.reference_point = glm::vec3(0.0, 2.2, 0.0);
+            body_node.add_child(&main_rotor_node);
+            body_node.add_child(&tail_rotor_node);
+            body_node.add_child(&door_node);
+
+            terrain_node.add_child(&body_node);
+            helicopters.push(body_node);
+        }
+
 
         // Basic usage of shader helper
         // The code below returns a shader object, which contains the field .program_id
@@ -240,12 +240,17 @@ fn main() {
             let delta_time = now.duration_since(last_frame_time).as_secs_f32();
             last_frame_time = now;
 
-            main_rotor_node.rotation += glm::vec3(0.0, 10.0 * delta_time, 0.0);
-            tail_rotor_node.rotation += glm::vec3(10.0 * delta_time, 0.0, 0.0);
+            for i in 0..helicopters.len() {
+                let heading = simple_heading_animation(elapsed + 0.8 * i as f32);
 
-            let heading = simple_heading_animation(elapsed);
-            body_node.position = glm::vec3(heading.x, 1.0, heading.z);
-            body_node.rotation = glm::vec3(heading.yaw, heading.pitch, heading.roll);
+                unsafe {
+                    (*helicopters[i].children[0]).rotation += glm::vec3(0.0, 10.0 * delta_time, 0.0);
+                    (*helicopters[i].children[1]).rotation += glm::vec3(10.0 * delta_time, 0.0, 0.0);
+                }
+
+                helicopters[i].position = glm::vec3(heading.x, 1.0, heading.z);
+                helicopters[i].rotation = glm::vec3(heading.yaw, heading.pitch, heading.roll);
+            }
 
             // Handle keyboard input
             if let Ok(keys) = pressed_keys.lock() {

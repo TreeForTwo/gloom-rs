@@ -10,7 +10,7 @@ use std::pin::Pin;
 // and finally prevents the compiler from dropping it automatically at all (ManuallyDrop). If that sounds like a janky solution, it's because it is.
 // Prettier, Rustier and better solutions were tried numerous times, but were all found wanting of having what I arbitrarily decided to be the required level of
 // simplicity of use.
-type Node = ManuallyDrop<Pin<Box<SceneNode>>>;
+pub type Node = ManuallyDrop<Pin<Box<SceneNode>>>;
 
 pub struct SceneNode {
     pub position: glm::Vec3,
