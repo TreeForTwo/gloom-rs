@@ -10,7 +10,7 @@ mod scene_graph;
 
 use glutin::event::{Event, WindowEvent, DeviceEvent, KeyboardInput, ElementState::{Pressed, Released}, VirtualKeyCode::{self, *}};
 use glutin::event_loop::ControlFlow;
-use glm::{Vec3, Vec2};
+use glm::{Vec3, Vec2, identity};
 use crate::shader::Shader;
 use std::f32::consts::PI;
 
@@ -79,10 +79,34 @@ unsafe fn create_vao(vertices: &Vec<f32>, normals: &Vec<f32>, colours: &Vec<f32>
     vao_index
 }
 
+unsafe fn update_node_transformations(root: &mut scene_graph::SceneNode, transformation_so_far: &glm::Mat4) {
+    // Construct the correct transformation matrix
+    let mut transform: glm::Mat4 = glm::identity();
+
+    transform *= transformation_so_far;
+    transform *= glm::translation(&root.position);
+    transform *= glm::translation(&root.reference_point);
+    transform *= glm::rotation(root.rotation.z, &glm::vec3(0.0, 0.0, 1.0));
+    transform *= glm::rotation(root.rotation.y, &glm::vec3(0.0, 1.0, 0.0));
+    transform *= glm::rotation(root.rotation.x, &glm::vec3(1.0, 0.0, 0.0));
+    transform *= glm::translation(&(&root.reference_point * -1.0));
+
+    // Update the node's transformation matrix
+    root.current_transformation_matrix = transform;
+
+    // Recurse
+    for &child in &root.children {
+        update_node_transformations(&mut *child,
+                                    &root.current_transformation_matrix);
+    }
+}
+
 unsafe fn draw_scene(root: &scene_graph::SceneNode, view_projection_matrix: &glm::Mat4) {
     // Check if node is drawable, set uniforms, draw
     if root.index_count != -1 {
-        gl::UniformMatrix4fv(3, 1, gl::FALSE, view_projection_matrix.as_ptr());
+        let mut transform: glm::Mat4 = view_projection_matrix * &root.current_transformation_matrix;
+
+        gl::UniformMatrix4fv(3, 1, gl::FALSE, transform.as_ptr());
         gl::BindVertexArray(root.vao_id);
         gl::DrawElements(gl::TRIANGLES, (3 * root.index_count), gl::UNSIGNED_INT, ptr::null());
     }
@@ -164,6 +188,15 @@ fn main() {
         let mut main_rotor_node = scene_graph::SceneNode::from_vao(vao_indices[2], index_counts[2]);
         let mut tail_rotor_node = scene_graph::SceneNode::from_vao(vao_indices[3], index_counts[3]);
         let mut door_node = scene_graph::SceneNode::from_vao(vao_indices[4], index_counts[4]);
+
+        body_node.position = glm::vec3(0.0, 0.0, -20.0);
+        body_node.rotation = glm::vec3(0.0, PI / 2.0, 0.0);
+
+        main_rotor_node.rotation = glm::vec3(0.0, 0.5, 0.0);
+        tail_rotor_node.rotation = glm::vec3(0.5, 0.0, 0.0);
+
+        tail_rotor_node.reference_point = glm::vec3(0.35, 2.3, 10.4);
+        main_rotor_node.reference_point = glm::vec3(0.0, 2.2, 0.0);
 
         root_node.add_child(&terrain_node);
         terrain_node.add_child(&body_node);
@@ -266,6 +299,7 @@ fn main() {
                 transform *= glm::rotation(ang.x, &glm::vec3(0.0, 1.0, 0.0));
                 transform *= glm::translation(&pos);
 
+                update_node_transformations(&mut root_node, &glm::identity());
                 draw_scene(&root_node, &transform);
             }
 
