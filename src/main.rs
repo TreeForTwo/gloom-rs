@@ -5,6 +5,7 @@ use std::sync::{Mutex, Arc, RwLock};
 
 mod shader;
 mod util;
+mod mesh;
 
 use glutin::event::{Event, WindowEvent, DeviceEvent, KeyboardInput, ElementState::{Pressed, Released}, VirtualKeyCode::{self, *}};
 use glutin::event_loop::ControlFlow;
@@ -121,6 +122,7 @@ fn main() {
         }
 
         // == // Set up your VAO here
+        let terrain = mesh::Terrain::load("resources/lunarsurface.obj");
         let tris: Vec<f32> = vec![-0.6, 0.7, 0.4,
                                   0., -0.5, 0.4,
                                   0.6, 0.7, 0.4,
@@ -148,7 +150,8 @@ fn main() {
                                      0.0, 0.0, 1.0, 0.5,];
         let mut vao_index: u32 = 0;
         unsafe {
-            vao_index = create_vao(&tris, &indices, &colours);
+            vao_index = create_vao(&terrain.vertices, &terrain.indices,
+                                   &terrain.colors);
         }
 
         // Basic usage of shader helper
@@ -240,7 +243,7 @@ fn main() {
 
                 let mut transform: glm::Mat4 = glm::identity();
 
-                transform *= glm::perspective(1.0, PI / 2.0, 1.0, 100.0);
+                transform *= glm::perspective(1.0, PI / 2.0, 1.0, 1000.0);
                 transform *= glm::translation(&glm::vec3(0.0, 0.0, -1.2));
                 transform *= glm::scaling(&glm::vec3(1.0, 1.0, -1.0));
                 transform *= glm::rotation(ang.y, &glm::vec3(1.0, 0.0, 0.0));
@@ -251,7 +254,7 @@ fn main() {
 
                 // Issue the necessary commands to draw your scene here
                 gl::BindVertexArray(vao_index);
-                gl::DrawElements(gl::TRIANGLES, (3 * indices.len() as i32), gl::UNSIGNED_INT, ptr::null());
+                gl::DrawElements(gl::TRIANGLES, (3 * terrain.index_count), gl::UNSIGNED_INT, ptr::null());
                 
             }
 
