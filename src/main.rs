@@ -6,6 +6,7 @@ use std::sync::{Mutex, Arc, RwLock};
 mod shader;
 mod util;
 mod mesh;
+mod scene_graph;
 
 use glutin::event::{Event, WindowEvent, DeviceEvent, KeyboardInput, ElementState::{Pressed, Released}, VirtualKeyCode::{self, *}};
 use glutin::event_loop::ControlFlow;
@@ -78,6 +79,19 @@ unsafe fn create_vao(vertices: &Vec<f32>, normals: &Vec<f32>, colours: &Vec<f32>
     vao_index
 }
 
+unsafe fn draw_scene(root: &scene_graph::SceneNode, view_projection_matrix: &glm::Mat4) {
+    // Check if node is drawable, set uniforms, draw
+    if root.index_count != -1 {
+        gl::UniformMatrix4fv(3, 1, gl::FALSE, view_projection_matrix.as_ptr());
+        gl::BindVertexArray(root.vao_id);
+        gl::DrawElements(gl::TRIANGLES, (3 * root.index_count), gl::UNSIGNED_INT, ptr::null());
+    }
+    // Recurse
+    for &child in &root.children {
+        draw_scene(&*child, view_projection_matrix);
+    }
+}
+
 fn main() {
     // Set up the necessary objects to deal with windows and event handling
     let el = glutin::event_loop::EventLoop::new();
@@ -137,12 +151,25 @@ fn main() {
         unsafe {
             vao_indices.push(create_mesh_vao(&terrain));
             index_counts.push(terrain.index_count);
-            for i in 0..3 {
+            for i in 0..4 {
                 vao_indices.push(create_mesh_vao(&helicopter[i]));
                 index_counts.push(helicopter[i].index_count);
             }
         }
 
+        // Set up scene graph
+        let mut root_node = scene_graph::SceneNode::new();
+        let mut terrain_node = scene_graph::SceneNode::from_vao(vao_indices[0], index_counts[0]);
+        let mut body_node = scene_graph::SceneNode::from_vao(vao_indices[1], index_counts[1]);
+        let mut main_rotor_node = scene_graph::SceneNode::from_vao(vao_indices[2], index_counts[2]);
+        let mut tail_rotor_node = scene_graph::SceneNode::from_vao(vao_indices[3], index_counts[3]);
+        let mut door_node = scene_graph::SceneNode::from_vao(vao_indices[4], index_counts[4]);
+
+        root_node.add_child(&terrain_node);
+        terrain_node.add_child(&body_node);
+        body_node.add_child(&main_rotor_node);
+        body_node.add_child(&tail_rotor_node);
+        body_node.add_child(&door_node);
 
         // Basic usage of shader helper
         // The code below returns a shader object, which contains the field .program_id
@@ -239,13 +266,7 @@ fn main() {
                 transform *= glm::rotation(ang.x, &glm::vec3(0.0, 1.0, 0.0));
                 transform *= glm::translation(&pos);
 
-                gl::UniformMatrix4fv(3, 1, gl::FALSE, transform.as_ptr());
-
-                // Issue the necessary commands to draw your scene here
-                for i in 0..vao_indices.len() {
-                    gl::BindVertexArray(vao_indices[i]);
-                    gl::DrawElements(gl::TRIANGLES, (3 * index_counts[i]), gl::UNSIGNED_INT, ptr::null());
-                }
+                draw_scene(&root_node, &transform);
             }
 
             context.swap_buffers().unwrap();
